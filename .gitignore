@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+build/
+dist/
+*.egg-info/
+
+# Tests and tools
+.coverage
+.coverage.*
+htmlcov/
+pytest*.xml
+.pytest_cache/
+.ruff_cache/
+.prettier_cache
+
+# Local settings and secrets
+.env
+.idea/
+.vscode
+
+# Build output, Task state, and exported CAs
+.build/
+.task/
+*.tar.zst
+zarf-sbom/
+public-root-ca.pem

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: matrix
+  annotations:
+    linkerd.io/inject: enabled
+    # Base denies by default; for now any meshed pod in the cluster may call these
+    config.linkerd.io/default-inbound-policy: cluster-authenticated
