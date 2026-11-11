@@ -1,0 +1,23 @@
+apiVersion: platform.opendefence.fi/v1alpha1
+kind: Integration
+metadata:
+  name: matrix
+spec:
+  displayName: Matrix
+  version: "0.1.0+261111"
+  productInfo:
+    descriptions:
+      - language: en
+        title: Matrix
+        description: Matrix messaging service
+      - language: fi
+        title: Matrix
+        description: Matrix viestipalvelu
+      - language: sv
+        title: Matrix
+        description: Matrix meddelandetjänst
+  extraRoles:
+    - name: matrix-user
+      displayName: Matrix user
+    - name: matrix-admin
+      displayName: Matrix admin

@@ -1,0 +1,3 @@
+# Local development: a public name that resolves to 127.0.0.1, with a
+# certificate from base's local CA
+domain: local-dev.opendefence.fi

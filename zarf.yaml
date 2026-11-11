@@ -1,0 +1,22 @@
+kind: ZarfPackageConfig
+metadata:
+  name: integration-matrix
+  version: "0.1.0+261111"
+  description: Matrix messaging and calls for OpenDefence
+values:
+  files:
+    - values/values.yaml
+  schema: values/values.schema.json
+components:
+  - name: namespace
+    required: true
+    manifests:
+      - name: namespace
+        files:
+          - manifests/namespace.yaml
+  - name: integration
+    required: true
+    manifests:
+      - name: integration
+        files:
+          - manifests/integration.yaml
