@@ -14,6 +14,42 @@ components:
       - name: namespace
         files:
           - manifests/namespace.yaml
+  - name: postgres
+    required: true
+    manifests:
+      - name: postgres
+        files:
+          - manifests/postgres.yaml
+    actions:
+      onDeploy:
+        after:
+          - wait:
+              cluster:
+                kind: clusters.postgresql.cnpg.io
+                name: matrix-synapse-postgres
+                namespace: matrix
+                condition: Ready
+          - wait:
+              cluster:
+                kind: clusters.postgresql.cnpg.io
+                name: matrix-mas-postgres
+                namespace: matrix
+                condition: Ready
+  - name: matrix-stack
+    required: true
+    charts:
+      - name: matrix-stack
+        releaseName: matrix
+        namespace: matrix
+        url: oci://ghcr.io/element-hq/ess-helm/matrix-stack
+        version: 26.11.0
+        valuesFiles:
+          - helm-values/matrix-stack.yaml
+        values:
+          - sourcePath: .domain
+            targetPath: .serverName
+          - sourcePath: .domain
+            targetPath: .synapse.ingress.host
   - name: integration
     required: true
     manifests:
