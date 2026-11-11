@@ -4,8 +4,6 @@ elementWeb:
   enabled: false
 elementAdmin:
   enabled: false
-matrixRTC:
-  enabled: false
 postgres:
   enabled: false
 wellKnownDelegation:
@@ -57,3 +55,17 @@ matrixAuthenticationService:
         account:
           displayname_change_allowed: false
           account_deactivation_allowed: false
+
+matrixRTC:
+  ingress:
+    host: "{{ $.Values.serverName }}/integrations/matrix/rtc"
+  sfu:
+    useStunToDiscoverPublicIP: false
+    exposedServices:
+      rtcTcp:
+        portType: ClusterIP
+      rtcMuxedUdp:
+        portType: ClusterIP
+    annotations:
+      # Core's port pool
+      config.linkerd.io/skip-inbound-ports: 30000-32767

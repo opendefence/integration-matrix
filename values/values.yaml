@@ -1,2 +1,6 @@
 # Public hostname of the deployment, the same value as the domain of core.
 domain: opendefence.invalid
+# Placeholders: the deployment replaces them with the ports that core assigns
+rtc:
+  tcp: 30001
+  udp: 30002

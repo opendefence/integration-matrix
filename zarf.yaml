@@ -35,6 +35,30 @@ components:
                 name: matrix-mas-postgres
                 namespace: matrix
                 condition: Ready
+  - name: integration
+    required: true
+    manifests:
+      - name: integration
+        files:
+          - manifests/integration.yaml
+          - manifests/rtc.yaml
+    actions:
+      onDeploy:
+        after:
+          - wait:
+              cluster:
+                kind: integrations.platform.opendefence.fi
+                name: matrix
+                condition: PortsReady
+          # The SFU must listen on the ports that core assigned
+          - cmd: ./zarf tools kubectl get integrations.platform.opendefence.fi matrix -o jsonpath='{.status.ports[?(@.name=="rtc-tcp")].publicPort}'
+            setValues:
+              - key: .rtc.tcp
+                type: json
+          - cmd: ./zarf tools kubectl get integrations.platform.opendefence.fi matrix -o jsonpath='{.status.ports[?(@.name=="rtc-udp")].publicPort}'
+            setValues:
+              - key: .rtc.udp
+                type: json
   - name: matrix-stack
     required: true
     charts:
@@ -50,9 +74,7 @@ components:
             targetPath: .serverName
           - sourcePath: .domain
             targetPath: .synapse.ingress.host
-  - name: integration
-    required: true
-    manifests:
-      - name: integration
-        files:
-          - manifests/integration.yaml
+          - sourcePath: .rtc.tcp
+            targetPath: .matrixRTC.sfu.exposedServices.rtcTcp.port
+          - sourcePath: .rtc.udp
+            targetPath: .matrixRTC.sfu.exposedServices.rtcMuxedUdp.port

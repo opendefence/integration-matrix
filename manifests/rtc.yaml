@@ -1,0 +1,17 @@
+# The SFU listens on the ports that core assigns, so the targets are names
+apiVersion: v1
+kind: Service
+metadata:
+  name: matrix-rtc
+  namespace: matrix
+spec:
+  selector:
+    app.kubernetes.io/instance: matrix-matrix-rtc-sfu
+  ports:
+    - name: tcp
+      port: 7881
+      targetPort: rtc-tcp
+    - name: udp
+      protocol: UDP
+      port: 7882
+      targetPort: rtc-muxed-udp
