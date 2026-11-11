@@ -47,3 +47,13 @@ spec:
           path: ^/_matrix/client/(.*)/(login|logout|refresh)
           service: matrix-matrix-authentication-service
           port: 8080
+        - host: Public
+          path: /integrations/matrix/rtc
+          stripPrefix: /integrations/matrix/rtc
+          service: matrix-matrix-rtc-sfu
+          port: 7880
+        - host: Public
+          path: ^/integrations/matrix/rtc/(sfu/get|get_token|delegate_delayed_leave)$
+          stripPrefix: /integrations/matrix/rtc
+          service: matrix-matrix-rtc-authorisation-service
+          port: 8080
