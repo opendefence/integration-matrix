@@ -1,0 +1,27 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: matrix-synapse-postgres
+  namespace: matrix
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.3
+  inheritedMetadata:
+    annotations:
+      linkerd.io/inject: disabled
+  storage:
+    size: 5Gi
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: matrix-mas-postgres
+  namespace: matrix
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.3
+  inheritedMetadata:
+    annotations:
+      linkerd.io/inject: disabled
+  storage:
+    size: 1Gi

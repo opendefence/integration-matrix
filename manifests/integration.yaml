@@ -21,3 +21,29 @@ spec:
       displayName: Matrix user
     - name: matrix-admin
       displayName: Matrix admin
+  network:
+    ingress:
+      httpRoutes:
+        - host: Public
+          path: /_matrix
+          service: matrix-synapse
+          port: 8008
+        - host: Public
+          path: /_synapse/client
+          service: matrix-synapse
+          port: 8008
+        - host: Public
+          path: /.well-known/matrix
+          service: matrix-well-known
+          port: 8010
+        - host: Public
+          path: /integrations/matrix/auth
+          stripPrefix: /integrations/matrix/auth
+          blockedPaths:
+            - /integrations/matrix/auth/api/admin
+          service: matrix-matrix-authentication-service
+          port: 8080
+        - host: Public
+          path: ^/_matrix/client/(.*)/(login|logout|refresh)
+          service: matrix-matrix-authentication-service
+          port: 8080
