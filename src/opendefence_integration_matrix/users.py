@@ -17,6 +17,9 @@ NAMESPACE = "matrix"
 # superadmin is a core role: it counts as matrix-admin here
 MATRIX_ROLES = {"matrix-user", "matrix-admin", "superadmin"}
 
+# TEMPORARY: every account gets this password, for tests before real sign-in exists
+TEMPORARY_PASSWORD = "temporary-password"  # nosec B105  # pragma: allowlist secret
+
 # Set by the leader lifespan
 mas: MasAdmin | None = None
 
@@ -54,7 +57,8 @@ async def reconcile(request: Request[UserBinding]) -> None:
         )
         return
     try:
-        await mas.ensure_user(request.name)
+        ulid = await mas.ensure_user(request.name)
+        await mas.set_password(ulid, TEMPORARY_PASSWORD)
     except Exception as exc:
         request.condition(SYNCED_CONDITION, False, reason="ProvisionFailed", message=str(exc))
         raise
