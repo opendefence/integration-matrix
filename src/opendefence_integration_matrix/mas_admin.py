@@ -93,6 +93,16 @@ class MasAdmin:
         LOGGER.info("Created MAS user %s (%s)", localpart, ulid)
         return ulid
 
+    async def set_password(self, ulid: str, password: str) -> None:
+        """Set the user's password, without the complexity check."""
+        resp = await self._client.post(
+            f"{self._url}/api/admin/v1/users/{ulid}/set-password",
+            headers=await self._auth(),
+            json={"password": password, "skip_password_check": True},
+            timeout=30.0,
+        )
+        resp.raise_for_status()
+
     async def deactivate_user(self, localpart: str) -> bool:
         """Deactivate user in MAS, without erasure so ensure_user can reactivate them.
 

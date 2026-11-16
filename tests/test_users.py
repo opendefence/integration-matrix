@@ -78,6 +78,7 @@ async def test_wanted_user_without_a_binding_gets_one(calls: Mock) -> None:
 async def test_wanted_user_with_a_binding_is_provisioned(calls: Mock, role: str) -> None:
     await users.reconcile(request_for(calls, user(roles=(role,)), BINDING))
     calls.mas.ensure_user.assert_awaited_once_with("user-alpha")
+    calls.mas.set_password.assert_awaited_once_with(calls.mas.ensure_user.return_value, users.TEMPORARY_PASSWORD)
     calls.condition.assert_called_once_with("Synced", True, reason="Provisioned")
 
 
