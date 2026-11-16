@@ -35,6 +35,20 @@ components:
                 name: matrix-mas-postgres
                 namespace: matrix
                 condition: Ready
+  - name: operator-credentials
+    required: true
+    manifests:
+      - name: operator-credentials
+        files:
+          - manifests/operator/credentials.yaml
+    actions:
+      onDeploy:
+        after:
+          - wait:
+              cluster:
+                kind: secret
+                name: matrix-operator-mas
+                namespace: matrix
   - name: matrix-stack
     required: true
     charts:
@@ -56,3 +70,10 @@ components:
       - name: integration
         files:
           - manifests/integration.yaml
+  - name: operator
+    required: true
+    manifests:
+      - name: operator
+        files:
+          - manifests/operator/rbac.yaml
+          - manifests/operator/deployment.yaml
