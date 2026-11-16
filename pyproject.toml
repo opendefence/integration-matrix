@@ -9,6 +9,9 @@ dependencies = [
     "lib-opendefence-core",
 ]
 
+[project.scripts]
+matrix-operator = "opendefence_integration_matrix.app:main"
+
 [dependency-groups]
 dev = [
     "pytest>=9.1.1,<10.0",

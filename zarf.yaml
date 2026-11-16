@@ -35,6 +35,20 @@ components:
                 name: matrix-mas-postgres
                 namespace: matrix
                 condition: Ready
+  - name: operator-credentials
+    required: true
+    manifests:
+      - name: operator-credentials
+        files:
+          - manifests/operator/credentials.yaml
+    actions:
+      onDeploy:
+        after:
+          - wait:
+              cluster:
+                kind: secret
+                name: matrix-operator-mas
+                namespace: matrix
   - name: integration
     required: true
     manifests:
@@ -78,3 +92,10 @@ components:
             targetPath: .matrixRTC.sfu.exposedServices.rtcTcp.port
           - sourcePath: .rtc.udp
             targetPath: .matrixRTC.sfu.exposedServices.rtcMuxedUdp.port
+  - name: operator
+    required: true
+    manifests:
+      - name: operator
+        files:
+          - manifests/operator/rbac.yaml
+          - manifests/operator/deployment.yaml

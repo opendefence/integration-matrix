@@ -22,6 +22,16 @@ tasks:
     cmds:
       - zarf dev deploy . --connected --values {{.VALUES_FILE | shellQuote}}
 
+  image:
+    desc: Build the operator image and load it into the kind cluster
+    dir: "{{.TASKFILE_DIR}}/.."
+    vars:
+      IMAGE:
+        sh: grep -o 'ghcr.io/opendefence/integration-matrix-operator:[^ ]*' manifests/operator/deployment.yaml
+    cmds:
+      - docker build -t {{.IMAGE | shellQuote}} .
+      - kind load docker-image {{.IMAGE | shellQuote}} --name {{.CLUSTER_NAME | shellQuote}}
+
   lint:
     desc: Validate the Zarf package schema, sources, and baked values
     dir: "{{.TASKFILE_DIR}}/.."

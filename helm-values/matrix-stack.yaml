@@ -55,6 +55,9 @@ matrixAuthenticationService:
         account:
           displayname_change_allowed: false
           account_deactivation_allowed: false
+    operator:
+      configSecret: matrix-operator-mas # pragma: allowlist secret
+      configSecretKey: mas-config.yaml # pragma: allowlist secret
 
 matrixRTC:
   ingress:

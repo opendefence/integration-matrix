@@ -18,6 +18,12 @@ filename = "zarf.yaml"
 search = 'version: "{current_version}"'
 replace = 'version: "{new_version}"'
 
+# Container tags can't contain "+", so the image uses "-" before the build number
+[[tool.bumpversion.files]]
+filename = "manifests/operator/deployment.yaml"
+search = "ghcr.io/opendefence/integration-matrix-operator:{current_major}.{current_minor}.{current_patch}-{current_build}"
+replace = "ghcr.io/opendefence/integration-matrix-operator:{new_major}.{new_minor}.{new_patch}-{new_build}"
+
 [[tool.bumpversion.files]]
 filename = "pyproject.toml"
 search = 'version = "{current_version}"'
