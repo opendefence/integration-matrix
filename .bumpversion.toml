@@ -17,3 +17,17 @@ replace = 'version: "{new_version}"'
 filename = "zarf.yaml"
 search = 'version: "{current_version}"'
 replace = 'version: "{new_version}"'
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+
+[[tool.bumpversion.files]]
+filename = "uv.lock"
+search = '''
+name = "opendefence-integration-matrix"
+version = "{current_version}"'''
+replace = '''
+name = "opendefence-integration-matrix"
+version = "{new_version}"'''

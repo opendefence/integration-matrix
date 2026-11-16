@@ -30,6 +30,16 @@ tasks:
     cmds:
       - task --list
 
+  lint:
+    desc: Run all pre-commit hooks
+    cmds:
+      - uv run --locked prek run --all-files
+
+  test:
+    desc: Run the test suite; pass pytest arguments after --
+    cmds:
+      - uv run --locked pytest {{.CLI_ARGS}}
+
   up:
     desc: Start the cluster, deploy the base and core packages, then deploy this checkout
     cmds:
