@@ -74,7 +74,7 @@ async def test_wanted_user_without_a_binding_gets_one(calls: Mock) -> None:
     assert (created.name, created.namespace, created.spec.user_ref.name) == ("user-alpha", "matrix", "user-alpha")
 
 
-@pytest.mark.parametrize("role", ["matrix-user", "matrix-admin"])
+@pytest.mark.parametrize("role", ["matrix-user", "matrix-admin", "superadmin"])
 async def test_wanted_user_with_a_binding_is_provisioned(calls: Mock, role: str) -> None:
     await users.reconcile(request_for(calls, user(roles=(role,)), BINDING))
     calls.mas.ensure_user.assert_awaited_once_with("user-alpha")
@@ -88,7 +88,7 @@ async def test_failed_provision_is_reported_and_raised(calls: Mock) -> None:
     calls.condition.assert_called_once_with("Synced", False, reason="ProvisionFailed", message="MAS is down")
 
 
-@pytest.mark.parametrize("found", [user(roles=("superadmin",)), user(approved=False), user(revoked=True), None])
+@pytest.mark.parametrize("found", [user(roles=("tak-user",)), user(approved=False), user(revoked=True), None])
 async def test_unwanted_user_is_deactivated_before_the_binding_goes(calls: Mock, found: User | None) -> None:
     await users.reconcile(request_for(calls, found, BINDING))
     assert names(calls) == ["mas.deactivate_user", "bindings.delete"]
