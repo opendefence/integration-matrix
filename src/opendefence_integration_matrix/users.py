@@ -14,7 +14,8 @@ from lib_opendefence_core.models.v1alpha1 import (
 from .mas_admin import MasAdmin
 
 NAMESPACE = "matrix"
-MATRIX_ROLES = {"matrix-user", "matrix-admin"}
+# superadmin is a core role: it counts as matrix-admin here
+MATRIX_ROLES = {"matrix-user", "matrix-admin", "superadmin"}
 
 # Set by the leader lifespan
 mas: MasAdmin | None = None
