@@ -56,6 +56,29 @@ tasks:
           CORE_SET_VALUES: '{{.CORE_SET_VALUES | default "domain=local-dev.opendefence.fi,hsts.maxAge=0,ports.serviceType=NodePort"}}'
       - task: build:deploy
 
+  dev:
+    desc: Deploy this checkout with Tilt and redeploy on change
+    preconditions: &tilt
+      - sh: command -v tilt >/dev/null
+        msg: tilt is not on PATH
+      - sh: test "$(kubectl config current-context)" = {{.KUBE_CONTEXT | shellQuote}}
+        msg: Switch kubectl to the selected KUBE_CONTEXT before using Tilt
+    env: &tilt-env
+      KUBE_CONTEXT: "{{.KUBE_CONTEXT}}"
+    vars:
+      # The first free port from Tilt's default
+      TILT_PORT:
+        sh: python3 -c 'import itertools, socket; print(next(p for p in itertools.count(10350) if socket.socket().connect_ex(("127.0.0.1", p))))'
+    cmds:
+      - tilt up --port {{.TILT_PORT}}
+
+  dev:down:
+    desc: Remove the operator Tilt deployed
+    preconditions: *tilt
+    env: *tilt-env
+    cmds:
+      - tilt down
+
   down:
     desc: Delete the kind cluster and leave the registries running
     cmds:

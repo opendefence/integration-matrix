@@ -6,5 +6,6 @@ Matrix integration for the OpenDefence stack, as a Zarf package. It needs the [b
 mise install
 task up BASE_VERSION=<version> CORE_VERSION=<version>  # cluster, base, core, then this checkout
 task build:deploy                                      # this checkout only
+task dev                                               # this checkout only, with Tilt: redeploys on change
 task down
 ```

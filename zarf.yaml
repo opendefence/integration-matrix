@@ -92,8 +92,9 @@ components:
             targetPath: .matrixRTC.sfu.exposedServices.rtcTcp.port
           - sourcePath: .rtc.udp
             targetPath: .matrixRTC.sfu.exposedServices.rtcMuxedUdp.port
+  # Tilt deploys this one in dev
   - name: operator
-    required: true
+    default: true
     manifests:
       - name: operator
         files:
