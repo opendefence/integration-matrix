@@ -70,8 +70,9 @@ components:
       - name: integration
         files:
           - manifests/integration.yaml
+  # Tilt deploys this one in dev
   - name: operator
-    required: true
+    default: true
     manifests:
       - name: operator
         files:
