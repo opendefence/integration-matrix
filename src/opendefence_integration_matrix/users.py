@@ -16,7 +16,8 @@ from .synapse_admin import SynapseAdmin
 
 NAMESPACE = "matrix"
 # superadmin is a core role: it counts as matrix-admin here
-MATRIX_ROLES = {"matrix-user", "matrix-admin", "superadmin"}
+ADMIN_ROLES = {"matrix-admin", "superadmin"}
+MATRIX_ROLES = {"matrix-user", *ADMIN_ROLES}
 
 # TEMPORARY: every account gets this password, for tests before real sign-in exists
 TEMPORARY_PASSWORD = "temporary-password"  # nosec B105  # pragma: allowlist secret
@@ -27,13 +28,16 @@ synapse: SynapseAdmin | None = None
 room_ids: dict[str, str] = {}
 
 
+def role_names(user: User) -> set[str]:
+    return {role.name for role in user.status.roles} if user.status else set()
+
+
 def wanted(user: User) -> bool:
     """Return True for an approved, not revoked User that holds a Matrix role."""
-    roles = user.status.roles if user.status else []
     return (
         user.spec.approved_at is not None
         and user.spec.revoked_at is None
-        and not MATRIX_ROLES.isdisjoint(role.name for role in roles)
+        and not MATRIX_ROLES.isdisjoint(role_names(user))
     )
 
 
@@ -63,8 +67,13 @@ async def reconcile(request: Request[UserBinding]) -> None:
         ulid = await mas.ensure_user(request.name)
         await mas.set_password(ulid, TEMPORARY_PASSWORD)
         await synapse.set_displayname(request.name, user.spec.callsign)
-        for room_id in set(room_ids.values()) - await synapse.joined_rooms(request.name):
+        admin = not ADMIN_ROLES.isdisjoint(role_names(user))
+        wanted_ids = {room_id for alias, room_id in room_ids.items() if admin or alias != "admin"}
+        joined = await synapse.joined_rooms(request.name)
+        for room_id in wanted_ids - joined:
             await synapse.force_join(room_id, request.name)
+        for room_id in joined & set(room_ids.values()) - wanted_ids:
+            await synapse.kick(room_id, request.name)
     except Exception as exc:
         request.condition(SYNCED_CONDITION, False, reason="ProvisionFailed", message=str(exc))
         raise
