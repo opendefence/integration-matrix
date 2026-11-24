@@ -32,7 +32,7 @@ def _make_synapse(*, with_token: bool = True) -> SynapseAdmin:
     mas.ensure_user.return_value = "01BOT"
     mas.create_bot_token.return_value = ("bot-token", 3600.0)
     sa = SynapseAdmin("http://synapse.test", mas)
-    sa._server_name = "example.test"
+    sa.server_name = "example.test"
     if with_token:
         sa._token = "test-token"  # nosec B105
         sa._token_expires = time.monotonic() + 1000
@@ -77,7 +77,7 @@ async def test_enter_reads_server_name() -> None:
     with patch.object(sa._client, "get", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = _fake(200, {"user_id": "@matrix-operator:other.test:8448"})
         async with sa:
-            assert sa._server_name == "other.test:8448"
+            assert sa.server_name == "other.test:8448"
 
 
 # ---------------------------------------------------------------------------
