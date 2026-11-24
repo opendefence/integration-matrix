@@ -24,7 +24,7 @@ class SynapseAdmin:
     def __init__(self, synapse_url: str, mas: MasAdmin) -> None:
         self._url = synapse_url.rstrip("/")
         self._mas = mas
-        self._server_name = ""
+        self.server_name = ""
         self._token: str | None = None
         self._token_expires: float = 0.0
         self._client: httpx.AsyncClient = httpx.AsyncClient()
@@ -36,7 +36,7 @@ class SynapseAdmin:
             timeout=10.0,
         )
         resp.raise_for_status()
-        self._server_name = str(resp.json()["user_id"]).split(":", maxsplit=1)[1]
+        self.server_name = str(resp.json()["user_id"]).split(":", maxsplit=1)[1]
         return self
 
     async def __aexit__(self, *_: object) -> None:
@@ -51,11 +51,11 @@ class SynapseAdmin:
         return {"Authorization": f"Bearer {self._token}"}
 
     def _user_id(self, localpart: str) -> str:
-        return f"@{localpart}:{self._server_name}"
+        return f"@{localpart}:{self.server_name}"
 
     async def room_id_for_alias(self, alias: str) -> str | None:
         """Return the room ID for the alias localpart, or None if not found."""
-        encoded = quote(f"#{alias}:{self._server_name}", safe="")
+        encoded = quote(f"#{alias}:{self.server_name}", safe="")
         resp = await self._client.get(
             f"{self._url}/_matrix/client/v3/directory/room/{encoded}",
             headers=await self._auth(),
@@ -97,7 +97,7 @@ class SynapseAdmin:
             f"{self._url}/_matrix/client/v3/rooms/{quote(space_id, safe='')}"
             f"/state/m.space.child/{quote(room_id, safe='')}",
             headers=await self._auth(),
-            json={"via": [self._server_name]},
+            json={"via": [self.server_name]},
             timeout=10.0,
         )
         resp.raise_for_status()

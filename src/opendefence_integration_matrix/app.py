@@ -1,4 +1,4 @@
-"""The operator: the UserBinding controller, and the MAS client of the elected leader"""
+"""The operator: the UserBinding controller, and the MAS and Synapse clients of the elected leader"""
 
 import logging
 import os
@@ -8,8 +8,9 @@ from cloudcoil.application import Application, RBACRule
 from cloudcoil.controller import HealthServer
 from lib_opendefence_core.models.v1alpha1 import UserBinding
 
-from . import users
+from . import rooms, users
 from .mas_admin import MasAdmin
+from .synapse_admin import SynapseAdmin
 
 NAME = "matrix-operator"
 HEALTH_PORT = 8080
@@ -26,12 +27,16 @@ app = Application(
 
 @app.lifespan(scope="leader")
 async def matrix() -> AsyncIterator[None]:
-    async with MasAdmin(
-        "http://matrix-matrix-authentication-service:8080",
-        os.environ["MAS_ADMIN_CLIENT_ID"],
-        os.environ["MAS_ADMIN_CLIENT_SECRET"],
-    ) as mas:
+    async with (
+        MasAdmin(
+            "http://matrix-matrix-authentication-service:8080",
+            os.environ["MAS_ADMIN_CLIENT_ID"],
+            os.environ["MAS_ADMIN_CLIENT_SECRET"],
+        ) as mas,
+        SynapseAdmin("http://matrix-synapse:8008", mas) as synapse,
+    ):
         users.mas = mas
+        await rooms.ensure_rooms(synapse)
         yield
 
 
