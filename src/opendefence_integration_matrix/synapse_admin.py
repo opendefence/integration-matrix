@@ -112,6 +112,16 @@ class SynapseAdmin:
         resp.raise_for_status()
         return set(resp.json()["joined_rooms"])
 
+    async def set_displayname(self, localpart: str, displayname: str) -> None:
+        """Set the user's display name; users cannot change it themselves."""
+        resp = await self._client.put(
+            f"{self._url}/_matrix/client/v3/profile/{quote(self._user_id(localpart), safe='')}/displayname",
+            headers=await self._auth(),
+            json={"displayname": displayname},
+            timeout=10.0,
+        )
+        resp.raise_for_status()
+
     async def force_join(self, room_id: str, localpart: str) -> None:
         """Join the user to the room without an invite."""
         resp = await self._client.post(

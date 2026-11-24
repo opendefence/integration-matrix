@@ -4,6 +4,10 @@ from opendefence_integration_matrix import rooms
 from opendefence_integration_matrix.synapse_admin import SynapseAdmin
 
 
+def _room_id(_name: str, alias: str, *, is_space: bool = False, space_id: str | None = None) -> str:
+    return f"!{alias}"
+
+
 def _synapse() -> AsyncMock:
     synapse = AsyncMock(spec=SynapseAdmin)
     synapse.server_name = "kotka.example.test"
@@ -14,7 +18,7 @@ async def test_ensure_rooms_creates_the_missing() -> None:
     """An existing room is kept, a missing one is created, and each room is put in the space."""
     synapse = _synapse()
     synapse.room_id_for_alias.side_effect = {"space": "!space"}.get
-    synapse.create_room.side_effect = "!{1}".format
+    synapse.create_room.side_effect = _room_id
 
     ids = await rooms.ensure_rooms(synapse)
 
