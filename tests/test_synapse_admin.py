@@ -214,3 +214,15 @@ async def test_kick() -> None:
         await sa.kick(ROOM, "norppa11")
     assert mock_post.call_args.args[0] == f"{ROOMS_URL}/%21room/kick"
     assert mock_post.call_args.kwargs["json"] == {"user_id": "@norppa11:example.test"}
+
+
+@pytest.mark.asyncio
+async def test_set_displayname() -> None:
+    """The bot sets the name in the user's profile."""
+    sa = _make_synapse()
+    with patch.object(sa._client, "put", new_callable=AsyncMock) as mock_put:
+        mock_put.return_value = _fake(200, {})
+        await sa.set_displayname("norppa11", "Norppa 11")
+    url: str = mock_put.call_args.args[0]
+    assert url.endswith("/_matrix/client/v3/profile/%40norppa11%3Aexample.test/displayname")
+    assert mock_put.call_args.kwargs["json"] == {"displayname": "Norppa 11"}

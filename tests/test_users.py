@@ -18,6 +18,7 @@ from lib_opendefence_core.models.v1alpha1 import (
 
 from opendefence_integration_matrix import users
 from opendefence_integration_matrix.mas_admin import MasAdmin
+from opendefence_integration_matrix.synapse_admin import SynapseAdmin
 
 NOW = datetime(2026, 1, 1, tzinfo=UTC)
 BINDING = UserBinding(
@@ -44,11 +45,15 @@ def user(*, roles: tuple[str, ...] = ("matrix-user",), approved: bool = True, re
 
 @pytest.fixture
 def calls(monkeypatch: pytest.MonkeyPatch) -> Mock:
-    """Record the MAS and UserBinding client calls in order."""
+    """Record the MAS, Synapse and UserBinding client calls in order."""
     recorded = Mock()
     recorded.mas = AsyncMock(spec=MasAdmin)
     recorded.bindings = AsyncMock()
+    recorded.synapse = AsyncMock(spec=SynapseAdmin)
+    recorded.synapse.joined_rooms.return_value = {"!general"}
     monkeypatch.setattr(users, "mas", recorded.mas)
+    monkeypatch.setattr(users, "synapse", recorded.synapse)
+    monkeypatch.setattr(users, "room_ids", {"space": "!space", "general": "!general"})
     return recorded
 
 
@@ -80,6 +85,12 @@ async def test_wanted_user_with_a_binding_is_provisioned(calls: Mock, role: str)
     calls.mas.ensure_user.assert_awaited_once_with("user-alpha")
     calls.mas.set_password.assert_awaited_once_with(calls.mas.ensure_user.return_value, users.TEMPORARY_PASSWORD)
     calls.condition.assert_called_once_with("Synced", True, reason="Provisioned")
+
+
+async def test_provisioned_user_is_named_and_joined_to_the_missing_rooms(calls: Mock) -> None:
+    await users.reconcile(request_for(calls, user(), BINDING))
+    calls.synapse.set_displayname.assert_awaited_once_with("user-alpha", "Lokki")
+    calls.synapse.force_join.assert_awaited_once_with("!space", "user-alpha")
 
 
 async def test_failed_provision_is_reported_and_raised(calls: Mock) -> None:

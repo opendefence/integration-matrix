@@ -36,7 +36,8 @@ async def matrix() -> AsyncIterator[None]:
         SynapseAdmin("http://matrix-synapse:8008", mas) as synapse,
     ):
         users.mas = mas
-        await rooms.ensure_rooms(synapse)
+        users.synapse = synapse
+        users.room_ids = await rooms.ensure_rooms(synapse)
         yield
 
 
