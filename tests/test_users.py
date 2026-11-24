@@ -50,10 +50,10 @@ def calls(monkeypatch: pytest.MonkeyPatch) -> Mock:
     recorded.mas = AsyncMock(spec=MasAdmin)
     recorded.bindings = AsyncMock()
     recorded.synapse = AsyncMock(spec=SynapseAdmin)
-    recorded.synapse.joined_rooms.return_value = {"!general"}
+    recorded.synapse.joined_rooms.return_value = {"!general", "!other"}
     monkeypatch.setattr(users, "mas", recorded.mas)
     monkeypatch.setattr(users, "synapse", recorded.synapse)
-    monkeypatch.setattr(users, "room_ids", {"space": "!space", "general": "!general"})
+    monkeypatch.setattr(users, "room_ids", {"space": "!space", "general": "!general", "admin": "!admin"})
     return recorded
 
 
@@ -91,6 +91,20 @@ async def test_provisioned_user_is_named_and_joined_to_the_missing_rooms(calls: 
     await users.reconcile(request_for(calls, user(), BINDING))
     calls.synapse.set_displayname.assert_awaited_once_with("user-alpha", "Lokki")
     calls.synapse.force_join.assert_awaited_once_with("!space", "user-alpha")
+    calls.synapse.kick.assert_not_awaited()
+
+
+@pytest.mark.parametrize("role", ["matrix-admin", "superadmin"])
+async def test_admin_is_joined_to_the_admin_room(calls: Mock, role: str) -> None:
+    await users.reconcile(request_for(calls, user(roles=(role,)), BINDING))
+    assert {call.args[0] for call in calls.synapse.force_join.await_args_list} == {"!space", "!admin"}
+
+
+async def test_former_admin_is_kicked_from_the_admin_room(calls: Mock) -> None:
+    calls.synapse.joined_rooms.return_value = {"!space", "!general", "!admin", "!other"}
+    await users.reconcile(request_for(calls, user(), BINDING))
+    calls.synapse.kick.assert_awaited_once_with("!admin", "user-alpha")
+    calls.synapse.force_join.assert_not_awaited()
 
 
 async def test_failed_provision_is_reported_and_raised(calls: Mock) -> None:

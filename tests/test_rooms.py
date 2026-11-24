@@ -27,16 +27,19 @@ async def test_ensure_rooms_creates_the_missing() -> None:
         "general": "!general",
         "helpdesk": "!helpdesk",
         "offtopic": "!offtopic",
+        "admin": "!admin",
     }
     assert synapse.create_room.await_args_list == [
         call("General", "general", space_id="!space"),
         call("Helpdesk", "helpdesk", space_id="!space"),
         call("Offtopic", "offtopic", space_id="!space"),
+        call("Admin", "admin", space_id=None),
     ]
     assert synapse.add_child_to_space.await_args_list == [
         call("!space", "!general"),
         call("!space", "!helpdesk"),
         call("!space", "!offtopic"),
+        call("!space", "!admin"),
     ]
 
 
