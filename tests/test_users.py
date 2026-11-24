@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 from typing import cast
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, call
 
 import pytest
 from cloudcoil.apimachinery import ObjectMeta
@@ -98,6 +98,15 @@ async def test_provisioned_user_is_named_and_joined_to_the_missing_rooms(calls: 
 async def test_admin_is_joined_to_the_admin_room(calls: Mock, role: str) -> None:
     await users.reconcile(request_for(calls, user(roles=(role,)), BINDING))
     assert {call.args[0] for call in calls.synapse.force_join.await_args_list} == {"!space", "!admin"}
+
+
+@pytest.mark.parametrize(("role", "level"), [("matrix-user", 0), ("matrix-admin", 100), ("superadmin", 100)])
+async def test_power_level_follows_the_role_outside_the_admin_room(calls: Mock, role: str, level: int) -> None:
+    await users.reconcile(request_for(calls, user(roles=(role,)), BINDING))
+    assert calls.synapse.set_power_level.await_args_list == [
+        call("!space", "user-alpha", level),
+        call("!general", "user-alpha", level),
+    ]
 
 
 async def test_former_admin_is_kicked_from_the_admin_room(calls: Mock) -> None:
