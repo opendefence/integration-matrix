@@ -171,3 +171,22 @@ async def test_deactivate_user_not_found_skips() -> None:
         deactivated = await mas.deactivate_user("ghost")  # must not raise
     assert deactivated is False
     mock_post.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# create_bot_token
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_create_bot_token() -> None:
+    """The session is for the bot user, with the Synapse admin scope."""
+    mas = _make_mas()
+    with patch.object(mas._client, "post", new_callable=AsyncMock) as mock_post:
+        mock_post.return_value = _fake(201, {"data": {"attributes": {"access_token": "tok", "expires_in": 3600}}})
+        assert await mas.create_bot_token(USER_ULID) == ("tok", 3600.0)
+    url: str = mock_post.call_args.args[0]
+    assert url.endswith("/api/admin/v1/personal-sessions")
+    body: dict[str, Any] = mock_post.call_args.kwargs["json"]
+    assert body["actor_user_id"] == USER_ULID
+    assert "urn:synapse:admin:*" in body["scope"]

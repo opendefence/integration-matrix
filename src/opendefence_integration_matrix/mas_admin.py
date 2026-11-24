@@ -12,6 +12,12 @@ LOGGER = logging.getLogger(__name__)
 ADMIN_SCOPE = "urn:mas:admin"
 # Re-fetch the client-credentials token this many seconds before it expires
 TOKEN_EXPIRY_SKEW = 30.0
+BOT_SCOPE = (
+    "urn:matrix:org.matrix.msc2967.client:api:* "
+    "urn:synapse:admin:* "
+    "urn:matrix:org.matrix.msc2967.client:device:MATRIXOPERATOR"
+)
+BOT_TOKEN_EXPIRES_IN = 3600
 
 
 class MasAdmin:
@@ -102,6 +108,23 @@ class MasAdmin:
             timeout=30.0,
         )
         resp.raise_for_status()
+
+    async def create_bot_token(self, ulid: str) -> tuple[str, float]:
+        """Create a personal session for the bot user; return its token and lifetime in seconds."""
+        resp = await self._client.post(
+            f"{self._url}/api/admin/v1/personal-sessions",
+            headers=await self._auth(),
+            json={
+                "actor_user_id": ulid,
+                "human_name": "matrix-operator",
+                "scope": BOT_SCOPE,
+                "expires_in": BOT_TOKEN_EXPIRES_IN,
+            },
+            timeout=30.0,
+        )
+        resp.raise_for_status()
+        attributes = resp.json()["data"]["attributes"]
+        return str(attributes["access_token"]), float(attributes.get("expires_in", BOT_TOKEN_EXPIRES_IN))
 
     async def deactivate_user(self, localpart: str) -> bool:
         """Deactivate user in MAS, without erasure so ensure_user can reactivate them.
