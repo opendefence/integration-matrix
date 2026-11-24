@@ -74,6 +74,9 @@ async def reconcile(request: Request[UserBinding]) -> None:
             await synapse.force_join(room_id, request.name)
         for room_id in joined & set(room_ids.values()) - wanted_ids:
             await synapse.kick(room_id, request.name)
+        for alias, room_id in room_ids.items():
+            if alias != "admin":
+                await synapse.set_power_level(room_id, request.name, 100 if admin else 0)
     except Exception as exc:
         request.condition(SYNCED_CONDITION, False, reason="ProvisionFailed", message=str(exc))
         raise

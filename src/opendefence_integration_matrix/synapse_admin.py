@@ -132,6 +132,20 @@ class SynapseAdmin:
         )
         resp.raise_for_status()
 
+    async def set_power_level(self, room_id: str, localpart: str, level: int) -> None:
+        """Set the user's power level in the room, if it is not that already."""
+        url = f"{self._url}/_matrix/client/v3/rooms/{quote(room_id, safe='')}/state/m.room.power_levels"
+        resp = await self._client.get(url, headers=await self._auth(), timeout=10.0)
+        resp.raise_for_status()
+        levels: dict[str, Any] = resp.json()
+        users: dict[str, int] = levels.setdefault("users", {})
+        user_id = self._user_id(localpart)
+        if users.get(user_id, 0) == level:
+            return
+        users[user_id] = level
+        resp = await self._client.put(url, headers=await self._auth(), json=levels, timeout=10.0)
+        resp.raise_for_status()
+
     async def kick(self, room_id: str, localpart: str) -> None:
         """Remove the user from the room."""
         resp = await self._client.post(

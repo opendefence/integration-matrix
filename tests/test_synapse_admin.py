@@ -226,3 +226,45 @@ async def test_set_displayname() -> None:
     url: str = mock_put.call_args.args[0]
     assert url.endswith("/_matrix/client/v3/profile/%40norppa11%3Aexample.test/displayname")
     assert mock_put.call_args.kwargs["json"] == {"displayname": "Norppa 11"}
+
+
+# ---------------------------------------------------------------------------
+# Power levels
+# ---------------------------------------------------------------------------
+
+LEVELS_URL = f"{ROOMS_URL}/%21room/state/m.room.power_levels"
+
+
+@pytest.mark.asyncio
+async def test_set_power_level_keeps_the_other_levels() -> None:
+    """The whole event is sent back with only the user's level changed."""
+    sa = _make_synapse()
+    with (
+        patch.object(sa._client, "get", new_callable=AsyncMock) as mock_get,
+        patch.object(sa._client, "put", new_callable=AsyncMock) as mock_put,
+    ):
+        mock_get.return_value = _fake(200, {"users": {"@other:example.test": 100}, "invite": 50})
+        mock_put.return_value = _fake(200, {"event_id": "$e"})
+        await sa.set_power_level(ROOM, "norppa11", 100)
+    assert mock_put.call_args.args[0] == LEVELS_URL
+    assert mock_put.call_args.kwargs["json"] == {
+        "users": {"@other:example.test": 100, "@norppa11:example.test": 100},
+        "invite": 50,
+    }
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("users", "level"),
+    [({"@norppa11:example.test": 100}, 100), ({}, 0)],
+)
+async def test_set_power_level_unchanged_sends_nothing(users: dict[str, int], level: int) -> None:
+    """A level that is already right, or a missing one for level 0, needs no new event."""
+    sa = _make_synapse()
+    with (
+        patch.object(sa._client, "get", new_callable=AsyncMock) as mock_get,
+        patch.object(sa._client, "put", new_callable=AsyncMock) as mock_put,
+    ):
+        mock_get.return_value = _fake(200, {"users": users})
+        await sa.set_power_level(ROOM, "norppa11", level)
+    mock_put.assert_not_called()
