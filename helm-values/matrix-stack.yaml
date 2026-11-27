@@ -1,0 +1,68 @@
+inboundTrafficHandler: none
+
+elementWeb:
+  enabled: false
+elementAdmin:
+  enabled: false
+postgres:
+  enabled: false
+wellKnownDelegation:
+  baseDomainRedirect:
+    enabled: false
+
+initSecrets:
+  annotations:
+    linkerd.io/inject: disabled
+deploymentMarkers:
+  annotations:
+    linkerd.io/inject: disabled
+
+synapse:
+  checkConfigHook:
+    annotations:
+      linkerd.io/inject: disabled
+  postgres:
+    host: matrix-synapse-postgres-rw
+    user: app
+    database: app
+    sslMode: require
+    password:
+      secret: matrix-synapse-postgres-app # pragma: allowlist secret
+      secretKey: password # pragma: allowlist secret
+  additional:
+    opendefence:
+      config: |
+        federation_domain_whitelist: []
+        url_preview_enabled: false
+        enable_set_displayname: false
+        user_directory:
+          search_all_users: true
+
+matrixAuthenticationService:
+  ingress:
+    host: "{{ $.Values.serverName }}/integrations/matrix/auth/"
+  postgres:
+    host: matrix-mas-postgres-rw
+    user: app
+    database: app
+    sslMode: require
+    password:
+      secret: matrix-mas-postgres-app # pragma: allowlist secret
+      secretKey: password # pragma: allowlist secret
+  additional:
+    opendefence:
+      config: |
+        account:
+          displayname_change_allowed: false
+          account_deactivation_allowed: false
+    operator:
+      configSecret: matrix-operator-mas # pragma: allowlist secret
+      configSecretKey: mas-config.yaml # pragma: allowlist secret
+
+matrixRTC:
+  ingress:
+    host: "{{ $.Values.serverName }}/integrations/matrix/rtc"
+  sfu:
+    useStunToDiscoverPublicIP: false
+    annotations:
+      config.linkerd.io/skip-inbound-ports: "30001"

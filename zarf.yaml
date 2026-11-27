@@ -1,0 +1,80 @@
+kind: ZarfPackageConfig
+metadata:
+  name: integration-matrix
+  version: "0.1.0+261111"
+  description: Matrix messaging and calls for OpenDefence
+values:
+  files:
+    - values/values.yaml
+  schema: values/values.schema.json
+components:
+  - name: namespace
+    required: true
+    manifests:
+      - name: namespace
+        files:
+          - manifests/namespace.yaml
+  - name: postgres
+    required: true
+    manifests:
+      - name: postgres
+        files:
+          - manifests/postgres.yaml
+    actions:
+      onDeploy:
+        after:
+          - wait:
+              cluster:
+                kind: clusters.postgresql.cnpg.io
+                name: matrix-synapse-postgres
+                namespace: matrix
+                condition: Ready
+          - wait:
+              cluster:
+                kind: clusters.postgresql.cnpg.io
+                name: matrix-mas-postgres
+                namespace: matrix
+                condition: Ready
+  - name: operator-credentials
+    required: true
+    manifests:
+      - name: operator-credentials
+        files:
+          - manifests/operator/credentials.yaml
+    actions:
+      onDeploy:
+        after:
+          - wait:
+              cluster:
+                kind: secret
+                name: matrix-operator-mas
+                namespace: matrix
+  - name: matrix-stack
+    required: true
+    charts:
+      - name: matrix-stack
+        releaseName: matrix
+        namespace: matrix
+        url: oci://ghcr.io/element-hq/ess-helm/matrix-stack
+        version: 26.11.0
+        valuesFiles:
+          - helm-values/matrix-stack.yaml
+        values:
+          - sourcePath: .domain
+            targetPath: .serverName
+          - sourcePath: .domain
+            targetPath: .synapse.ingress.host
+  - name: integration
+    required: true
+    manifests:
+      - name: integration
+        files:
+          - manifests/integration.yaml
+  # Tilt deploys this one in dev
+  - name: operator
+    default: true
+    manifests:
+      - name: operator
+        files:
+          - manifests/operator/rbac.yaml
+          - manifests/operator/deployment.yaml

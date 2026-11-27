@@ -1,0 +1,2 @@
+# Public hostname of the deployment, the same value as the domain of core.
+domain: opendefence.invalid

@@ -1,0 +1,54 @@
+[project]
+name = "opendefence-integration-matrix"
+version = "0.1.0+261111"
+description = "OpenDefence Matrix integration"
+requires-python = ">=3.14,<4.0"
+dependencies = [
+    "cloudcoil[kubernetes,operator]>=0.8.0,<1.0",
+    "httpx>=0.28.1,<1.0",
+    "lib-opendefence-core",
+]
+
+[project.scripts]
+matrix-operator = "opendefence_integration_matrix.app:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1,<10.0",
+    "pytest-asyncio>=1.4.0,<2.0",
+    "ruff>=0.16.7,<1.0",
+    "bandit>=1.9.4,<2.0",
+    "pyrefly>=1.3.0,<2.0",
+    "prek>=0.5.2,<1.0",
+]
+
+[build-system]
+requires = ["hatchling==1.32.4"]
+build-backend = "hatchling.build"
+
+# shortcut: the index stops at 0.2.3; use it when core publishes 0.5
+[tool.uv.sources]
+lib-opendefence-core = { git = "https://github.com/opendefence/core", branch = "dev_rebase", subdirectory = "src/lib_opendefence_core" }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/opendefence_integration_matrix"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "PL", "I", "UP", "B", "RUF"]
+# Literal values in comparisons, such as HTTP status codes, read better inline
+ignore = ["PLR2004"]
+
+[tool.pyrefly]
+preset = "strict"
+project-includes = ["src", "tests"]
+search-path = ["src", "."]
+python-version = "3.14"
+
+[tool.pytest.ini_options]
+addopts = "-p no:cloudcoil"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
