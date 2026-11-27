@@ -1,4 +1,4 @@
-"""One UserBinding and one Matrix account for each User that holds a Matrix role"""
+"""One UserBinding and one Matrix account, in the space and its rooms, for each User that holds a Matrix role"""
 
 from cloudcoil.apimachinery import ObjectMeta
 from cloudcoil.controller import Controller, Request, ResourceKey
@@ -12,6 +12,7 @@ from lib_opendefence_core.models.v1alpha1 import (
 )
 
 from .mas_admin import MasAdmin
+from .synapse_admin import SynapseAdmin
 
 NAMESPACE = "matrix"
 # superadmin is a core role: it counts as matrix-admin here
@@ -22,6 +23,8 @@ TEMPORARY_PASSWORD = "temporary-password"  # nosec B105  # pragma: allowlist sec
 
 # Set by the leader lifespan
 mas: MasAdmin | None = None
+synapse: SynapseAdmin | None = None
+room_ids: dict[str, str] = {}
 
 
 def wanted(user: User) -> bool:
@@ -36,8 +39,8 @@ def wanted(user: User) -> bool:
 
 async def reconcile(request: Request[UserBinding]) -> None:
     """Keep the binding and the account exactly while the User is wanted."""
-    if mas is None:
-        raise RuntimeError("The MAS client is not set up")
+    if mas is None or synapse is None:
+        raise RuntimeError("The MAS and Synapse clients are not set up")
     user = request.cached(User).get(request.name)
     bindings_client = await request.client(UserBinding)
     # The Matrix localpart is the User name: the callsign can change
@@ -59,6 +62,9 @@ async def reconcile(request: Request[UserBinding]) -> None:
     try:
         ulid = await mas.ensure_user(request.name)
         await mas.set_password(ulid, TEMPORARY_PASSWORD)
+        await synapse.set_displayname(request.name, user.spec.callsign)
+        for room_id in set(room_ids.values()) - await synapse.joined_rooms(request.name):
+            await synapse.force_join(room_id, request.name)
     except Exception as exc:
         request.condition(SYNCED_CONDITION, False, reason="ProvisionFailed", message=str(exc))
         raise
